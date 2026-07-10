@@ -1,0 +1,29 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: '0 2 * * *'        # UTC 02:00 = 北京 10:00
+  workflow_dispatch:           # 手动按钮
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork (release)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          ref: release          # ← 重点：检出你自己的 release 分支
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever.git
+          git fetch upstream
+      - name: Merge upstream release
+        run: |
+          git checkout release
+          git merge --ff-only upstream/release || echo "Already up to date."
+      - name: Push if changed
+        run: |
+          git push origin release
